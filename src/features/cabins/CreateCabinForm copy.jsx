@@ -1,13 +1,13 @@
 import styled from "styled-components";
-
+import { createEditCabin } from "../../services/apiCabins";
+import toast from "react-hot-toast";
 import Input from "../../ui/Input";
 import Form from "../../ui/Form";
 import Button from "../../ui/Button";
 import FileInput from "../../ui/FileInput";
 import Textarea from "../../ui/Textarea";
 import { useForm } from "react-hook-form";
-import { useCreateCabin } from "./useCreateCabin";
-import { useUpdateCabin } from "./useUpadatecabin";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 const FormRow = styled.div`
   display: grid;
@@ -45,34 +45,29 @@ const Error = styled.span`
   color: var(--color-red-700);
 `;
 
-function CreateCabinForm({cabinToEdit = {},onCloseModal}) {
-  const {id: editId, ...editValues} = cabinToEdit
-  const isEditSession = Boolean(editId)
-  const { register, handleSubmit, reset, getValues, formState } = useForm(
-    {
-      defaultValues: isEditSession ? editValues : {}
-    }
-  );
+function CreateCabinForm() {
+  const { register, handleSubmit, reset, getValues, formState } = useForm();
   const { errors } = formState;
-  const {isCreating,createCabin} = useCreateCabin()
-  const {isEditing,editCabin} = useUpdateCabin()
-  const isWorking = isCreating || isEditing
+  const queryClient = useQueryClient();
+  const { mutate, isLoading: isCreating } = useMutation({
+    mutationFn: createCabin,
+    onSuccess: () => {
+      toast.success("Cabin successfully created");
+      queryClient.invalidateQueries({
+        queryKey: ["cabins"]
+      });
+      reset();
+    },
+    onError: (err) => toast.error(err.message),
+  });
   function onSubmit(data) {
-    const image = typeof data.image === "string" ? data.image : data.image[0];
-    if (isEditSession) editCabin({newCabinData:{...data, image}, id: editId},
-      {onSuccess: 
-        (data) => {
-          reset(); 
-          onCloseModal?.();
-        },
-      }); 
-    else createCabin({ ...data, image: image },{onSuccess: (data) => reset()});
+    mutate({ ...data, image: data.image[0] });
   }
   function onError(errors) {
     console.log(errors);
   }
   return (
-    <Form onSubmit={handleSubmit(onSubmit, onError)} type={onCloseModal ? "modal" : "regular"}>
+    <Form onSubmit={handleSubmit(onSubmit, onError)}>
       <FormRow>
         <Label htmlFor="name">Cabin name</Label>
         <Input type="text" id="name" {...register("name", {
@@ -134,17 +129,17 @@ function CreateCabinForm({cabinToEdit = {},onCloseModal}) {
           id="image"
           accept="image/*"
           type="file"
-          {...register("image", { required:isEditSession ? false : "This field is required" })}
+          {...register("image", { required: "This field is required" })}
         />
 
       </FormRow>
 
       <FormRow>
         {/* type is an HTML attribute! */}
-        <Button variation="secondary" type="reset" onClick={()=>onCloseModal()}>
+        <Button variation="secondary" type="reset">
           Cancel
         </Button>
-        <Button disabled={isWorking}>{isEditSession ? "Edit cabin" : "Add cabin"}</Button>
+        <Button disabled={isCreating}>Add cabin</Button>
       </FormRow>
     </Form>
   );

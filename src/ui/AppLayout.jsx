@@ -11,9 +11,15 @@ grid-template-rows: auto 1fr;
 const Main = styled.main`
     background-color: var(--color-grey-100);
     padding: 4.8rem;
-    height: 100vh;
-    flex: 1;
-    overflow: auto;
+    overflow: scroll;
+
+`
+const Container = styled.div`
+ max-width: 120rem;
+ margin: 0 auto;
+ display: flex;
+ flex-direction: column;
+ gap: 3.2rem;
 `
 function AppLayout() {
     return (
@@ -21,7 +27,9 @@ function AppLayout() {
             <Header />
             <Sidebar />
             <Main>
-                <Outlet />
+                <Container>
+                    <Outlet />
+                </Container>
             </Main>
         </StyledAppLayout>
     )

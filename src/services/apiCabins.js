@@ -1,9 +1,63 @@
-import supabase  from "./supabase";
+import { th } from "date-fns/locale";
+import supabase from "./supabase";
+import { supabaseUrl } from "./supabase";
 export async function getCabins() {
   let { data, error } = await supabase.from("cabins").select("*");
-  if(error) {
+  if (error) {
     console.error(error);
     throw new Error("Cabins could not be loaded");
   }
   return data;
+}
+export async function createEditCabin(newCabin,id) {
+  const hasImagePath = newCabin.image?.startsWith?.(supabaseUrl);
+  const imageName = `${Math.random()}-${newCabin.image.name}`.replaceAll(
+    "/",
+    ""
+  )
+  const imagePath = hasImagePath ? newCabin.image : `${supabaseUrl}/storage/v1/object/public/cabin-Images/${imageName}`;
+
+  let query = supabase.from('cabins');
+
+  if (!id) 
+    query = query
+    .insert([
+      {...newCabin, image: imagePath}
+    ]);
+    if(id) query = query.update({...newCabin, image: imagePath}).eq('id', id);
+
+    const { data, error } = await query.select().single();
+  
+  
+  if (error) {
+    console.error(error);
+    throw new Error("Cabins could not be loaded");
+  }
+  //Upload image
+  if(hasImagePath) return data; 
+  const {  error: storageError } = await supabase
+  .storage
+  .from('cabin-Images')
+  .upload(imageName, newCabin.image);
+//Delete the cabin
+  if (storageError) {
+     await supabase
+    .from("cabins")
+    .delete()
+    .eq("id", data[0].id);
+    console.error(storageError);
+    throw new Error("Image could not be uploaded");
+  }
+  return data;
+}
+export async function deleteCabin(id) {
+  const { error, data } = await supabase
+    .from("cabins")
+    .delete()
+    .eq("id", id);
+    if (error) {
+      console.error(error);
+      throw new Error("Cabins could not be loaded");
+    }
+    return data;
 }
