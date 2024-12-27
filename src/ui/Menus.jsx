@@ -7,7 +7,7 @@ import { useOutSideClick } from "../hooks/useOutSideClick";
 const StyledMenu = styled.div`
   display: flex;
   align-items: center;
-  justify-content: flex-end;
+    
 `;
 
 const StyledToggle = styled.button`
@@ -126,7 +126,7 @@ function Button({ children,icon, onClick }) {
   )
 }
 Menus.Menu = Menu
-Menus.Toggle = Toggle
+Menus.Toggle =  Toggle
 Menus.List = List
 Menus.Button = Button
 export default Menus
