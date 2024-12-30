@@ -11,7 +11,11 @@ import Spinner from "../../ui/Spinner";
 import { useMoveBack } from "../../hooks/useMoveBack";
 import { useBook } from "./useBook";
 import { useNavigate } from "react-router-dom";
-import { HiArrowDownOnSquare } from "react-icons/hi2";
+import { HiArrowDownOnSquare, HiArrowUpOnSquare, HiTrash } from "react-icons/hi2";
+import { useCheckout } from "../check-in-out/useCheckout";
+import Modal from "../../ui/Modal";
+import { useDeleteBooking } from "./useDeleteBooking";
+import ConfirmDelete from "../../ui/ConfirmDelete";
 
 const HeadingGroup = styled.div`
   display: flex;
@@ -21,6 +25,8 @@ const HeadingGroup = styled.div`
 
 function BookingDetail() {
   const { booking, isLoading } = useBook();
+  const { checkout, isCheckingOut } = useCheckout()
+  const { deleteBooking, isDeleting } = useDeleteBooking()
   const navigate = useNavigate();
   const moveBack = useMoveBack();
   if (isLoading) return <Spinner />
@@ -43,7 +49,30 @@ function BookingDetail() {
 
       <BookingDataBox booking={booking} />
       {status === "unconfirmed" &&
-        <Button icon={<HiArrowDownOnSquare />} onClick={() => navigate(`/checkin/${id}`)}>Check in</Button>}
+        <Button
+          icon={<HiArrowDownOnSquare />}
+          onClick={() => navigate(`/checkin/${id}`)}
+        >Check in
+        </Button>}
+      {status === "checked-in" &&
+        <Button
+          icon={<HiArrowUpOnSquare />}
+          onClick={() => checkout(id)}
+          disabled={isCheckingOut}
+        >Check out
+        </Button>}
+      <Modal>
+        <Modal.Open opens="delete-booking">
+          <Button variation="danger" icon={<HiTrash />}>
+            Delete booking
+          </Button>
+        </Modal.Open>
+        <Modal.Window name="delete-booking">
+          <ConfirmDelete resourceName="bookings" 
+          disabled={isDeleting} 
+          onConfirm={() => deleteBooking(id, { onSettled: () => navigate(-1) })} />
+        </Modal.Window>
+      </Modal>
       <ButtonGroup>
         <Button variation="secondary" onClick={moveBack}>
           Back
