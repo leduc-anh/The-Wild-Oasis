@@ -1,4 +1,7 @@
 import styled from "styled-components";
+import Heading from "../../ui/Heading";
+import { Cell, Legend, Pie, PieChart, ResponsiveContainer } from "recharts";
+import { useDarkmode } from "../../context/DarkmodeContext";
 
 const ChartBox = styled.div`
   /* Box */
@@ -130,3 +133,38 @@ function prepareData(startData, stays) {
 
   return data;
 }
+function DurationChart({ confirmedStays }) {
+  const {isDarkmode} = useDarkmode();
+  const startData = isDarkmode ? startDataDark : startDataLight;
+  const data = prepareData(startData, confirmedStays);
+  return (
+    <ChartBox>
+      <Heading as="h2">Stay duration summary</Heading>
+      <ResponsiveContainer width="100%" height={240}>
+        <PieChart>
+          <Pie
+            data={data}
+            nameKey="duration"
+            dataKey="value"
+            innerRadius={70}
+            outerRadius={90}
+            cx="40%"
+            cy="50%"
+            paddingAngle={3}
+          >
+            {data.map(entry => <Cell key={entry.duration} fill={entry.color} stroke={entry.color} />)}
+          </Pie>
+        <Legend verticalAlign="middle"
+        align="right"
+        width="35%"
+        iconSize={10}
+        layout="vertical"
+        iconType="circle"
+        />
+        </PieChart>
+      </ResponsiveContainer>
+    </ChartBox>
+  )
+}
+
+export default DurationChart
